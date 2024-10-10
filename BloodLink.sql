@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS BloodLink;
 USE BloodLink;
 SELECT DATABASE();# Just an information function, doesn't do anything
 SHOW tables;
-
+#remove commet=nt ----
 #Disable safe mode
 SET SQL_SAFE_UPDATES = 0;
 
