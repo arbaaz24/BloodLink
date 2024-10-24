@@ -2,7 +2,7 @@ SHOW DATABASES;
 -- Create the database and select it
 CREATE DATABASE IF NOT EXISTS BloodLink;
 USE BloodLink;
-
+-- DROP DATABASE BloodLink;
 -- Disable safe mode
 SET SQL_SAFE_UPDATES = 0;
 
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS Person (
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
     Age INT,
-    Gender ENUM('Male', 'Female', 'Other')
+    Gender VARCHAR(10)
 );
 
 -- Create Table for explanation of Location Codes
@@ -455,5 +455,7 @@ INSERT INTO Donations (Donation_ID, Donor_ID, Donation_Type, Donation_Date, Quan
 (18, 19, 3, '2024-06-26', 342),
 (19, 17, 3, '2024-07-15', 300),
 (20, 13, 3, '2024-10-06', 395);
+
+
 
 

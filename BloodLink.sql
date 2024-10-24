@@ -159,3 +159,26 @@ CREATE TABLE IF NOT EXISTS Donor (
     FOREIGN KEY (PersonalID) REFERENCES Person(PersonalID) ON DELETE CASCADE
 );
 
+-- testing patient + donor via person --
+show tables;
+describe pre_exam;
+select * from blood_bags;
+select  * from locations inner join donation_records inner join blood_bags inner join transfusion_records ;
+select * from patient;
+select * from person inner join patient on person.PersonalID = patient.PersonalID;
+select * from donations ;
+select * from pre_exam;
+
+
+ -- 1.Specific to donor, suppose the donor travels abroad for donation and the hospital uses different units.
+ select person.PersonalID, concat(FirstName, ' ', LastName) AS 'Name', Blood_Type, Age, Gender, 
+ Weight*2.2 AS 'Donor Weight lb',
+ Weight AS 'Donor Weight kg',
+ Height AS 'Donor Height in meter',
+ Height*100 AS 'Donor Height in cm',
+ format(Height*3.281, 2) AS 'Donor height in feet',
+ NextSafeDonation from person inner join donor on person.PersonalID = donor.PersonalID
+ ORDER BY Weight, Height;
+
+-- 2. Fetch record of eligible donors for a patient who 
+select * from donor d inner join person p on p.PersonalID = d.PersonalID;
