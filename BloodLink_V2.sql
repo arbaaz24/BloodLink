@@ -456,6 +456,152 @@ INSERT INTO Donations (Donation_ID, Donor_ID, Donation_Type, Donation_Date, Quan
 (19, 17, 3, '2024-07-15', 300),
 (20, 13, 3, '2024-10-06', 395);
 
+-- Adding code with individual queries and more tables
+-- Arbaaz
+
+-- Creating an index on table 'donations' for faster access and creation of child tables
+CREATE INDEX idx_donations_id ON donations(Donor_ID);
+
+-- A table to store records of Donor after going through initial tests to assess potential
+CREATE TABLE Donor_Post_Exam_Results (
+    PostExamID INT PRIMARY KEY,   -- Unique identifier for each test result
+    Donor_ID INT,                          -- Foreign key to donations table
+    PreExamID INT UNSIGNED ,                        -- Foreign key to PreExam table
+    DiseaseDetected BOOLEAN,                       -- Indicates if a disqualifying disease is detected (1 for Yes, 0 for No)
+    EligibilityStatus ENUM('Eligible', 'Deferred', 'Disqualified'),  -- Status of donor based on the test results
+    Remarks TEXT,                                  -- Any additional comments or notes about the test results
+    FOREIGN KEY (Donor_ID) REFERENCES donations(Donor_ID),  -- Foreign key constraint to the donations table
+    FOREIGN KEY (PreExamID) REFERENCES pre_exam(PreExamID)  -- Foreign key constraint to the PreExam table
+);
+
+INSERT INTO Donor_Post_Exam_Results (PostExamID, Donor_ID, PreExamID, DiseaseDetected, EligibilityStatus, Remarks)
+VALUES
+(1, 1, 1, 0, 'Eligible', 'Fit for donation'),
+(2, 3, 2, 0, 'Deferred', 'Mild cold, defer for a week'),
+(3, 6, 4, 1, 'Disqualified', 'Detected flu symptoms'),
+(4, 8, 8, 1, 'Deferred', 'Sore throat, needs rest'),
+(5, 9, 9, 0, 'Eligible', 'Fit for donation'),
+(6, 11, 11, 1, 'Disqualified', 'Hypertension detected'),
+(7, 13, 13, 0, 'Eligible', 'Fit for donation'),
+(8, 14, 14, 0, 'Eligible', 'Healthy and fit'),
+(9, 15, 15, 0, 'Deferred', 'Minor headache, rest advised'),
+(10, 17, 17, 0, 'Eligible', 'Good health condition'),
+(11, 19, 19, 0, 'Eligible', 'Healthy and ready');
+
+ -- 1.Specific to donor, suppose the donor travels abroad for donation and the hospital uses different units.
+ select person.PersonalID, concat(FirstName, ' ', LastName) AS 'Name', Blood_Type, Age, Gender, 
+ Weight*2.2 AS 'Donor Weight lb',
+ Weight AS 'Donor Weight kg',
+ Height AS 'Donor Height in meter',
+ Height*100 AS 'Donor Height in cm',
+ format(Height*3.281, 2) AS 'Donor height in feet',
+ NextSafeDonation from person inner join donor on person.PersonalID = donor.PersonalID
+ ORDER BY Weight, Height;
+ 
+ -- 2. The query identifies potential donors with the blood type 'O+' and verifies their next safe donation date to ensure they are eligible to donate soon, ordering the results by the nearest donation date. 
+ -- This approach enables the hospital to make informed decisions regarding blood transfusions in emergencies, thereby maximizing patient care efficiency.
+
+SELECT d.PersonalID, p.FirstName, p.LastName, d.NextSafeDonation 
+FROM Donor d
+JOIN Person p ON d.PersonalID = p.PersonalID
+WHERE d.Blood_Type = 'O+' AND d.NextSafeDonation > CURDATE()
+ORDER BY d.NextSafeDonation ASC;
+
+-- Procedures, functions and triggers
+
+-- Arbaaz
+/* User defined function to check if Patient already exists in the database.
+ Takes PersonalID as argument and returns bool value (1 if exists else 0)
+*/
+DELIMITER $$
+CREATE FUNCTION PersonExists( p INT) RETURNS BOOL
+DETERMINISTIC
+BEGIN
+DECLARE result BOOL;
+SELECT 1 INTO result FROM Person WHERE PersonalID = p;
+IF result IS NULL THEN RETURN 0;
+END IF;
+RETURN result;
+ END $$
+ DELIMITER ;
+ 
+ -- Example expression to test PersonExists function
+ SELECT PersonExists(21);
+
+
+/* Procedure to insert details of mutiple patients using pipe character '|' as a delimiter between records and ',' as a delimiter between 
+each field. SUBSTRING_INDEX() used to process multiple patient data passed as a single string to the procedure.
+ Since Patient references Person table on PernoalID, procedure utilises branching statement and user defined funtion PersonExists() to make sure data is 
+ first added to Person table followed by updating Patient table.
+*/
+
+-- REMOVE these debuggig lines before integration
+/*
+SELECT * FROM person;
+select * from Person where PersonalID in ( 21,22);
+select * from patient where PersonalID in ( 21,22);
+delete from patient where PersonalID in (21,22);
+delete from person where PersonalID in (21,22);
+drop procedure AddMultiplePatients;
+drop function PersonExists;
+*/
+
+
+DELIMITER $$
+
+CREATE PROCEDURE AddMultiplePatients(
+    IN patientCount INT,
+    IN patientDetails TEXT
+)
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    DECLARE patientData TEXT;
+    DECLARE PersonalID INT UNSIGNED ;
+    DECLARE BloodType ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-');
+    DECLARE NeedStatus VARCHAR(50);
+    DECLARE Weight DECIMAL(5, 2);
+    DECLARE Reason VARCHAR(255);
+    DECLARE FirstName VARCHAR(50);
+    DECLARE LastName VARCHAR(50);
+    DECLARE Age INT;
+    DECLARE Gender ENUM('Male', 'Female', 'Other');
+    
+    -- Loop through the number of patients
+    WHILE i <= patientCount DO
+        -- Extract individual patient details from the provided string
+        SET patientData = SUBSTRING_INDEX(patientDetails, '|', -i);
+        
+        -- Assuming the data is pipe-separated, split into fields using ','
+        SET PersonalID = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 1), ',', -1);
+        SET BloodType = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 2), ',', -1);
+        SET NeedStatus = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 3), ',', -1);
+        SET Weight = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 4), ',', -1);
+        SET Reason = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 5), ',', -1);
+		SET FirstName = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 6), ',', -1);
+        SET LastName = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 7), ',', -1);
+        SET Age = SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 8), ',', -1);
+        SET Gender = SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(patientData, ',', 9), ',', -1), '|',1);
+        
+		IF  NOT PersonExists(PersonalID) THEN
+            -- Insert into the Person table if not exists
+            INSERT INTO person (PersonalID, FirstName, LastName, Age, Gender)
+            VALUES (PersonalID, FirstName, LastName, Age, Gender);
+        END IF;
+        
+        -- Insert each patient's data into the table
+        INSERT INTO Patient (PersonalID, BloodType, NeedStatus, Weight, Reason)
+        VALUES (PersonalID, BloodType, NeedStatus, Weight, Reason);
+
+        -- Increment the loop counter
+        SET i = i + 1;
+    END WHILE;
+END$$
+
+DELIMITER ;
+
+-- Example query to insert details of 2 patients
+CALL AddMultiplePatients(2, '21,B+,Routine,100.23,Surgery,Bhuresh,Singh,60,Male|22,B+,Routine,100.23,Surgery,Mansi,Arora,40,Female');
+
 
 
 
