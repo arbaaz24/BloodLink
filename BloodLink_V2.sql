@@ -2,7 +2,10 @@ SHOW DATABASES;
 -- Create the database and select it
 CREATE DATABASE IF NOT EXISTS BloodLink;
 USE BloodLink;
+/* Remove this line post-production */
 -- DROP DATABASE BloodLink;
+
+
 -- Disable safe mode
 SET SQL_SAFE_UPDATES = 0;
 
@@ -457,7 +460,7 @@ INSERT INTO Donations (Donation_ID, Donor_ID, Donation_Type, Donation_Date, Quan
 (20, 13, 3, '2024-10-06', 395);
 
 -- Adding code with individual queries and more tables
--- Arbaaz
+-- -------------------------------------------------------- Arbaaz
 
 -- Creating an index on table 'donations' for faster access and creation of child tables
 CREATE INDEX idx_donations_id ON donations(Donor_ID);
@@ -535,7 +538,7 @@ each field. SUBSTRING_INDEX() used to process multiple patient data passed as a 
  first added to Person table followed by updating Patient table.
 */
 
--- REMOVE these debuggig lines before integration
+-- REMOVE these debuggig lines post production
 /*
 SELECT * FROM person;
 select * from Person where PersonalID in ( 21,22);
@@ -599,8 +602,124 @@ END$$
 
 DELIMITER ;
 
+-- Query to test if Patients with PersonalID 21,22 exist or not. When run before calling the procedure, it returns Null
+select * from patient where PersonalID in ( 21,22);
+
 -- Example query to insert details of 2 patients
 CALL AddMultiplePatients(2, '21,B+,Routine,100.23,Surgery,Bhuresh,Singh,60,Male|22,B+,Routine,100.23,Surgery,Mansi,Arora,40,Female');
+
+-- Query to test if Patients with PersonalID 21,22 exist or not
+select * from patient where PersonalID in ( 21,22);
+
+-- -------------------------------------------------------- Usman
+-- Create a new table for eligible donors
+CREATE TABLE IF NOT EXISTS EligibleDonors AS
+SELECT d.PersonalID, d.Blood_Type, d.Weight, d.Height, d.NextSafeDonation,
+       p.FirstName, p.LastName, p.Age, p.Gender
+FROM Donor d
+JOIN Person p ON d.PersonalID = p.PersonalID
+WHERE d.NextSafeDonation <= CURDATE() AND d.Weight >= 50;
+
+-- Complex Query 1: Find the top 5 locations with the highest blood donation volume in the last 6 months
+SELECT l.LocationID, l.LocationName, l.City, 
+       SUM(bb.QuantityCC) AS TotalDonationVolume
+FROM Locations l
+JOIN Donation_Records dr ON l.LocationID = dr.LocationID
+JOIN Blood_Bags bb ON dr.BloodBagID = bb.BloodBagID
+WHERE dr.DonationDate >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+GROUP BY l.LocationID, l.LocationName, l.City
+ORDER BY TotalDonationVolume DESC
+LIMIT 5;
+
+-- Complex Query 2: Calculate the average donation quantity per blood type in the last 6 months
+SELECT d.Blood_Type, AVG(bb.QuantityCC) AS AverageDonationQuantity, COUNT(*) AS DonationCount
+FROM Donor d
+JOIN Donation_Records dr ON d.PersonalID = dr.DonationID
+JOIN Blood_Bags bb ON dr.BloodBagID = bb.BloodBagID
+WHERE dr.DonationDate >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+GROUP BY d.Blood_Type
+ORDER BY AverageDonationQuantity DESC;
+
+-- -------------------------------------------------------- Sundeep
+#Tracks upcoming donation appointments for donors, helping to manage donor schedules and locations
+CREATE TABLE IF NOT EXISTS Scheduled_Donations (
+    ScheduleID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    DonorID INT UNSIGNED,
+    NextDonationDate DATE,
+    IntervalDays INT UNSIGNED,  -- Days between scheduled donations
+    LocationID INT UNSIGNED,
+    FOREIGN KEY (DonorID) REFERENCES Donor(PersonalID),
+    FOREIGN KEY (LocationID) REFERENCES Locations(LocationID)
+);
+
+INSERT INTO Scheduled_Donations (DonorID, NextDonationDate, IntervalDays, LocationID) VALUES
+(1, '2024-11-01', 56, 3),
+(2, '2024-11-15', 14, 2),
+(3, '2024-12-01', 56, 1),
+(4, '2024-12-10', 7, 4),
+(5, '2024-11-05', 14, 5),
+(6, '2024-11-12', 56, 2),
+(7, '2024-11-17', 7, 3),
+(8, '2024-12-08', 56, 4),
+(9, '2024-11-20', 14, 1),
+(10, '2024-12-02', 56, 5),
+(11, '2024-11-18', 7, 2),
+(12, '2024-11-25', 14, 3),
+(13, '2024-12-05', 56, 4),
+(14, '2024-11-30', 7, 1),
+(15, '2024-11-22', 14, 2);
+
+# Displays donors with scheduled donations within the next 30 days, assisting staff with reminders and resource allocation
+SELECT D.PersonalID AS DonorID,
+       P.FirstName,
+       P.LastName,
+       SD.NextDonationDate,
+       SD.IntervalDays,
+       L.LocationName
+FROM Scheduled_Donations SD
+JOIN Donor D ON SD.DonorID = D.PersonalID
+JOIN Person P ON D.PersonalID = P.PersonalID
+JOIN Locations L ON SD.LocationID = L.LocationID
+WHERE SD.NextDonationDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+ORDER BY SD.NextDonationDate ASC;
+
+# Tracks recurring transfusion schedules for patients, including blood type, interval between transfusions, and location
+CREATE TABLE IF NOT EXISTS Transfusion_Schedule (
+    ScheduleID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT UNSIGNED,
+    BloodType ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'),
+    NextTransfusionDate DATE,
+    FrequencyDays INT UNSIGNED,  -- Days between scheduled transfusions
+    LocationID INT UNSIGNED,
+    NotificationSent ENUM('Yes', 'No') DEFAULT 'No',
+    FOREIGN KEY (PatientID) REFERENCES Patient(PersonalID),
+    FOREIGN KEY (LocationID) REFERENCES Locations(LocationID)
+);
+
+INSERT INTO Transfusion_Schedule (PatientID, BloodType, NextTransfusionDate, FrequencyDays, LocationID) VALUES
+(1, 'A+', '2024-11-10', 30, 1),
+(2, 'B-', '2024-11-15', 14, 2),
+(3, 'O+', '2024-12-01', 7, 3),
+(4, 'AB+', '2024-12-05', 21, 4),
+(5, 'O-', '2024-11-20', 30, 5),
+(6, 'A-', '2024-11-25', 14, 2),
+(7, 'B+', '2024-11-12', 7, 1),
+(8, 'AB-', '2024-12-03', 30, 3),
+(9, 'O+', '2024-11-18', 21, 4),
+(10, 'A+', '2024-12-02', 14, 5);
+
+#Identifies patients due for transfusions in the next 30 days without notification, enabling timely reminders and preparation.
+SELECT P.FirstName, 
+       P.LastName,
+       TS.BloodType,
+       TS.NextTransfusionDate,
+       L.LocationName
+FROM Transfusion_Schedule TS
+JOIN Person P ON TS.PatientID = P.PersonalID
+JOIN Locations L ON TS.LocationID = L.LocationID
+WHERE TS.NextTransfusionDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+  AND TS.NotificationSent = 'No'
+ORDER BY TS.NextTransfusionDate ASC;
 
 
 
