@@ -159,7 +159,9 @@ CREATE TABLE IF NOT EXISTS Donations (
     Donation_Type INT,
     Donation_Date DATE,
     Quantity INT,
-    FOREIGN KEY (Donation_Type) REFERENCES Donation_Types(Type)
+    FOREIGN KEY (Donation_Type) REFERENCES Donation_Types(Type),
+    UNIQUE (Donor_ID)
+    -- UNIQUE(Donation_ID)
 );
 
 INSERT INTO Person (PersonalID, FirstName, LastName, Age, Gender) VALUES
@@ -438,24 +440,24 @@ INSERT INTO Transfusion (TransfusionID, PersonalID, LocationID, PreExamID, Nurse
 (20, 15, 3, 13, 14, 265);
 
 INSERT INTO Donations (Donation_ID, Donor_ID, Donation_Type, Donation_Date, Quantity) VALUES
-(1, 17, 1, '2024-05-12', 315),
+(1, 176, 1, '2024-05-12', 315),
 (2, 11, 1, '2024-12-16', 485),
 (3, 6, 1, '2024-04-17', 436),
 (4, 15, 1, '2024-12-15', 439),
-(5, 15, 1, '2024-04-23', 353),
-(6, 13, 1, '2024-06-03', 454),
-(7, 1, 1, '2024-03-20', 318),
+(5, 33, 1, '2024-04-23', 353),
+(6, 84, 1, '2024-06-03', 454),
+(7, 165, 1, '2024-03-20', 318),
 (8, 8, 2, '2024-04-26', 355),
 (9, 14, 2, '2024-02-17', 416),
-(10, 8, 2, '2024-12-05', 484),
+(10, 55, 2, '2024-12-05', 484),
 (11, 1, 2, '2024-03-09', 380),
-(12, 9, 2, '2024-12-02', 405),
+(12, 656, 2, '2024-12-02', 405),
 (13, 19, 2, '2024-07-24', 321),
 (14, 9, 2, '2024-11-07', 369),
-(15, 19, 3, '2024-01-15', 330),
+(15, 66, 3, '2024-01-15', 330),
 (16, 3, 3, '2024-08-06', 413),
-(17, 6, 3, '2024-07-26', 466),
-(18, 19, 3, '2024-06-26', 342),
+(17, 98, 3, '2024-07-26', 466),
+(18, 97, 3, '2024-06-26', 342),
 (19, 17, 3, '2024-07-15', 300),
 (20, 13, 3, '2024-10-06', 395);
 
