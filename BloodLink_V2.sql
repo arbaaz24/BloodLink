@@ -465,7 +465,7 @@ INSERT INTO Donations (Donation_ID, Donor_ID, Donation_Type, Donation_Date, Quan
 -- -------------------------------------------------------- Arbaaz
 
 -- Creating an index on table 'donations' for faster access and creation of child tables
-CREATE INDEX idx_donations_id ON donations(Donor_ID);
+-- CREATE INDEX idx_donations_id ON donations(Donor_ID);
 
 -- A table to store records of Donor after going through initial tests to assess potential
 CREATE TABLE Donor_Post_Exam_Results (
@@ -723,6 +723,105 @@ WHERE TS.NextTransfusionDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 
   AND TS.NotificationSent = 'No'
 ORDER BY TS.NextTransfusionDate ASC;
 
+-- ----------------------------------------------------------------------- Praneeth
+ # Engagement_Records table to track frequent donors and patients
+CREATE TABLE IF NOT EXISTS Engagement_Records (
+    EngagementID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    PersonalID INT UNSIGNED, 
+    EngagementType ENUM('Donor', 'Patient'),
+    TotalEvents INT UNSIGNED,
+    LastEventDate DATE,
+    FOREIGN KEY (PersonalID) REFERENCES Person(PersonalID)
+);
+
+# Insert sample data into Engagement_Records
+INSERT INTO Engagement_Records (PersonalID, EngagementType, TotalEvents, LastEventDate) VALUES
+(1, 'Donor', 10, '2024-09-10'),
+(2, 'Patient', 5, '2024-08-15'),
+(3, 'Donor', 12, '2024-08-20'),
+(4, 'Patient', 7, '2024-09-25'),
+(5, 'Donor', 15, '2024-10-01'),
+(6, 'Patient', 8, '2024-08-30'),
+(7, 'Donor', 9, '2024-09-15'),
+(8, 'Patient', 10, '2024-09-12'),
+(9, 'Donor', 11, '2024-10-05'),
+(10, 'Patient', 6, '2024-10-09'),
+(11, 'Donor', 15, '2024-10-10'),
+(12, 'Patient', 10, '2024-09-18'),
+(13, 'Donor', 14, '2024-09-23'),
+(14, 'Patient', 12, '2024-09-30'),
+(15, 'Donor', 8, '2024-10-02');
+
+# Blood_Demand_History table to track blood type demands over time
+CREATE TABLE IF NOT EXISTS Blood_Demand_History (
+    DemandID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    BloodType ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'),
+    LocationID INT UNSIGNED,
+    DemandDate DATE,
+    QuantityDemanded INT UNSIGNED
+);
+
+# Insert sample data into Blood_Demand_History
+INSERT INTO Blood_Demand_History (BloodType, LocationID, DemandDate, QuantityDemanded) VALUES 
+('AB+', 4, '2023-01-08', 450),
+('O+', 5, '2023-01-15', 389),
+('A-', 4, '2023-01-22', 415),
+('O-', 5, '2023-01-29', 372),
+('B+', 2, '2023-02-05', 333),
+('AB-', 1, '2023-02-12', 398),
+('A+', 3, '2023-02-19', 320),
+('B-', 4, '2023-02-26', 356),
+('O+', 5, '2023-03-05', 285),
+('A+', 1, '2024-01-15', 450),
+('B+', 1, '2024-01-16', 300),
+('O-', 2, '2024-01-17', 500);
+
+#The query highlights high-engagement donors and patients, helping prioritize individuals with frequent interactions in the blood donation system.
+SELECT P.FirstName, 
+       P.LastName, 
+       ER.EngagementType,
+       ER.TotalEvents, 
+       ER.LastEventDate
+FROM Engagement_Records ER
+JOIN Person P ON ER.PersonalID = P.PersonalID
+WHERE ER.TotalEvents >= 5
+ORDER BY ER.EngagementType, ER.TotalEvents DESC;
+
+#Identify high-demand blood types per location
+#Helps track and prioritize blood types with high demand for efficient inventory management.
+
+SELECT 
+    BloodType,
+    LocationID,
+    SUM(QuantityDemanded) AS TotalDemand,
+    MAX(DemandDate) AS MostRecentDemand
+FROM 
+    Blood_Demand_History
+GROUP BY 
+    BloodType, LocationID
+HAVING 
+    TotalDemand > 400
+ORDER BY 
+    TotalDemand DESC, MostRecentDemand DESC;
+    
+-- ----------------------------------------------------------------Victoria
+-- Complex Query 1: Calculate the average Hemoglobin values per blood group at time of pre-exam, determines the norm for future donations
+SELECT patient.BloodType, AVG(pre_exam.HemoglobinGDL) AS AverageHemoglobin
+	FROM pre_exam
+JOIN Transfusion ON transfusion.PreExamID = pre_exam.PreExamID
+JOIN patient ON patient.PersonalID = transfusion.PersonalID
+GROUP BY patient.BloodType 
+ORDER BY AverageHemoglobin DESC;
+
+-- Complex Query 2: Inventory levels per blood type
+SELECT blood_bags.BloodType, COUNT(*) AS AvailableInventory 
+	FROM global_inventory
+JOIN locations ON locations.LocationID = global_inventory.LocationID
+JOIN transfusion_records ON transfusion_records.LocationID = global_inventory.LocationID
+JOIN blood_bags ON blood_bags.BloodBagID = transfusion_records.BloodBagID
+WHERE global_inventory.Available=0
+GROUP BY blood_bags.BloodType 
+ORDER BY AvailableInventory DESC;    
 
 
 
