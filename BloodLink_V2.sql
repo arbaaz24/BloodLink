@@ -79,10 +79,12 @@ CREATE TABLE IF NOT EXISTS Patient (
 
 -- Create Table for Nurse
 CREATE TABLE IF NOT EXISTS Nurse (
-    PersonalID INT UNSIGNED NOT NULL,   -- Foreign key to Patient.PersonalID
+    PatientID INT UNSIGNED NOT NULL,   -- Foreign key to Patient.PersonalID
+    NurseID INT UNSIGNED NOT NULL,
     ExperienceYears INT UNSIGNED,
-    PRIMARY KEY (PersonalID),
-    FOREIGN KEY (PersonalID) REFERENCES Patient(PersonalID)
+    PRIMARY KEY (PatientID),
+    FOREIGN KEY (PatientID) REFERENCES Patient(PersonalID),
+    FOREIGN KEY (NurseID) REFERENCES Person(PersonalID)
 );
 
 -- Create the Donor table
@@ -149,7 +151,7 @@ CREATE TABLE IF NOT EXISTS Transfusion (
     FOREIGN KEY (PersonalID) REFERENCES Patient(PersonalID),
     FOREIGN KEY (LocationID) REFERENCES Locations(LocationID),
     FOREIGN KEY (PreExamID) REFERENCES Pre_Exam(PreExamID),
-    FOREIGN KEY (NurseID) REFERENCES Nurse(PersonalID)
+    FOREIGN KEY (NurseID) REFERENCES Nurse(NurseID)
 );
 
 -- Create Table for Donations
@@ -241,22 +243,22 @@ INSERT INTO Pre_Exam (PreExamID, HemoglobinGDL, TemperatureF, BloodPressure, Pul
 (2, 13.2, 99.1, '130/85', 78, 'Asthma'),
 (3, 15.0, 98.4, '118/75', 68, 'None'),
 (4, 12.8, 98.9, '125/82', 75, 'Diabetes'),
-(5, 14.2, 98.7, '122/78', 70, 'None'),
-(6, 13.8, 98.5, '119/79', 71, 'Hypertension'),
-(7, 14.7, 98.8, '121/81', 73, 'None'),
-(8, 13.5, 99.0, '128/84', 76, 'Allergies'),
-(9, 15.2, 98.3, '117/76', 69, 'None'),
-(10, 14.0, 98.9, '123/80', 74, 'Arthritis'),
-(11, 13.9, 98.7, '120/78', 72, 'None'),
-(12, 14.8, 98.6, '118/77', 70, 'Migraines'),
-(13, 13.3, 99.2, '132/86', 79, 'None'),
-(14, 15.1, 98.5, '116/75', 68, 'Thyroid disorder'),
-(15, 14.3, 98.8, '124/81', 73, 'None'),
-(16, 13.7, 99.0, '126/83', 75, 'Eczema'),
-(17, 14.9, 98.4, '119/78', 71, 'None'),
-(18, 13.6, 98.9, '127/82', 74, 'Asthma'),
-(19, 15.3, 98.6, '115/74', 67, 'None'),
-(20, 14.1, 98.7, '122/79', 72, 'Osteoporosis');
+(5, 14.2, 98.7, '122/78', 70, 'None'); -- since we only want donors
+-- (6, 13.8, 98.5, '119/79', 71, 'Hypertension'),
+-- (7, 14.7, 98.8, '121/81', 73, 'None'),
+-- (8, 13.5, 99.0, '128/84', 76, 'Allergies'),
+-- (9, 15.2, 98.3, '117/76', 69, 'None'),
+-- (10, 14.0, 98.9, '123/80', 74, 'Arthritis'),
+-- (11, 13.9, 98.7, '120/78', 72, 'None'),
+-- (12, 14.8, 98.6, '118/77', 70, 'Migraines'),
+-- (13, 13.3, 99.2, '132/86', 79, 'None'),
+-- (14, 15.1, 98.5, '116/75', 68, 'Thyroid disorder'),
+-- (15, 14.3, 98.8, '124/81', 73, 'None'),
+-- (16, 13.7, 99.0, '126/83', 75, 'Eczema'),
+-- (17, 14.9, 98.4, '119/78', 71, 'None'),
+-- (18, 13.6, 98.9, '127/82', 74, 'Asthma'),
+-- (19, 15.3, 98.6, '115/74', 67, 'None'),
+-- (20, 14.1, 98.7, '122/79', 72, 'Osteoporosis');
 
 INSERT INTO Donation_Types (Type, Frequency_day) VALUES
 (1, 56),  -- Whole Blood
@@ -264,70 +266,57 @@ INSERT INTO Donation_Types (Type, Frequency_day) VALUES
 (3, 7);   -- Platelets
 
 INSERT INTO Patient (PersonalID, BloodType, NeedStatus, Weight, Reason) VALUES
-(1, 'A+', 'Urgent', 70.5, 'Surgery'),
-(2, 'B-', 'Routine', 65.2, 'Anemia'),
-(3, 'O+', 'Urgent', 80.0, 'Trauma'),
-(4, 'AB+', 'Routine', 72.3, 'Cancer Treatment'),
-(5, 'A-', 'Urgent', 68.7, 'Blood Disorder'),
+-- (1, 'A+', 'Urgent', 70.5, 'Surgery'),
+-- (2, 'B-', 'Routine', 65.2, 'Anemia'),
+-- (3, 'O+', 'Urgent', 80.0, 'Trauma'),
+-- (4, 'AB+', 'Routine', 72.3, 'Cancer Treatment'),
+-- (5, 'A-', 'Urgent', 68.7, 'Blood Disorder'),
 (6, 'O-', 'Routine', 75.8, 'Chronic Anemia'),
 (7, 'B+', 'Urgent', 82.1, 'Accident Victim'),
 (8, 'AB-', 'Routine', 68.5, 'Scheduled Surgery'),
 (9, 'O+', 'Urgent', 79.3, 'Postpartum Hemorrhage'),
 (10, 'A+', 'Routine', 71.6, 'Chemotherapy'),
 (11, 'B-', 'Urgent', 66.9, 'Gastrointestinal Bleeding'),
-(12, 'AB+', 'Routine', 77.2, 'Kidney Disease'),
-(13, 'O-', 'Urgent', 73.4, 'Liver Transplant'),
-(14, 'A-', 'Routine', 69.8, 'Sickle Cell Disease'),
-(15, 'B+', 'Urgent', 80.5, 'Severe Burns'),
-(16, 'AB-', 'Routine', 74.1, 'Thalassemia'),
-(17, 'O+', 'Urgent', 76.3, 'Leukemia'),
-(18, 'A+', 'Routine', 70.9, 'Hemophilia'),
-(19, 'B-', 'Urgent', 83.2, 'Cardiac Surgery'),
-(20, 'AB+', 'Routine', 67.8, 'Aplastic Anemia');
+(12, 'AB+', 'Routine', 77.2, 'Kidney Disease'); -- since we only want patients
+-- (13, 'O-', 'Urgent', 73.4, 'Liver Transplant'),
+-- (14, 'A-', 'Routine', 69.8, 'Sickle Cell Disease'),
+-- (15, 'B+', 'Urgent', 80.5, 'Severe Burns'),
+-- (16, 'AB-', 'Routine', 74.1, 'Thalassemia'),
+-- (17, 'O+', 'Urgent', 76.3, 'Leukemia'),
+-- (18, 'A+', 'Routine', 70.9, 'Hemophilia'),
+-- (19, 'B-', 'Urgent', 83.2, 'Cardiac Surgery'),
+-- (20, 'AB+', 'Routine', 67.8, 'Aplastic Anemia');
 
-INSERT INTO Nurse (PersonalID, ExperienceYears) VALUES
-(1, 5),
-(2, 10),
-(3, 3),
-(4, 7),
-(5, 15),
-(6, 8),
-(7, 12),
-(8, 6),
-(9, 9),
-(10, 20),
-(11, 4),
-(12, 11),
-(13, 7),
-(14, 13),
-(15, 2),
-(16, 16),
-(17, 1),
-(18, 14),
-(19, 5),
-(20, 18);
+INSERT INTO Nurse (PatientID, NurseID, ExperienceYears) VALUES
+(6, 13, 8),
+(7, 14, 12),
+(8, 15, 6),
+(9, 16, 9),
+(10, 17,  20),
+(11, 18,  4),
+(12, 19,  11);
 
 INSERT INTO Donor (PersonalID, Blood_Type, Weight, Height, NextSafeDonation) VALUES
 (1, 'O+', 75.5, 1.75, '2024-12-15'),
 (2, 'A-', 68.0, 1.63, '2024-11-30'),
 (3, 'B+', 82.3, 1.80, '2025-01-10'),
 (4, 'AB-', 70.1, 1.68, '2024-12-05'),
-(5, 'O-', 77.8, 1.73, '2024-12-20'),
-(6, 'A+', 72.5, 1.70, '2024-12-25'),
-(7, 'B-', 85.0, 1.86, '2025-01-05'),
-(8, 'O+', 68.7, 1.60, '2024-12-10'),
-(9, 'AB+', 79.2, 1.78, '2024-12-30'),
-(10, 'A-', 74.6, 1.74, '2025-01-15'),
-(11, 'O-', 81.3, 1.82, '2024-12-18'),
-(12, 'B+', 69.8, 1.66, '2025-01-08'),
-(13, 'AB-', 76.4, 1.76, '2024-12-22'),
-(14, 'O+', 83.7, 1.88, '2025-01-12'),
-(15, 'A+', 71.9, 1.70, '2024-12-28'),
-(16, 'B-', 78.5, 1.78, '2025-01-20'),
-(17, 'AB+', 73.2, 1.71, '2024-12-12'),
-(18, 'O-', 80.9, 1.84, '2025-01-25'),
-(19, 'A-', 67.3, 1.63, '2024-12-08'),
-(20, 'B+', 84.6, 1.87, '2025-01-18');
+(5, 'O-', 77.8, 1.73, '2024-12-20');
+-- (6, 'A+', 72.5, 1.70, '2024-12-25'),
+-- (7, 'B-', 85.0, 1.86, '2025-01-05'),
+-- (8, 'O+', 68.7, 1.60, '2024-12-10'),
+-- (9, 'AB+', 79.2, 1.78, '2024-12-30'),
+-- (10, 'A-', 74.6, 1.74, '2025-01-15'),
+-- (11, 'O-', 81.3, 1.82, '2024-12-18'),
+-- (12, 'B+', 69.8, 1.66, '2025-01-08'),
+-- (13, 'AB-', 76.4, 1.76, '2024-12-22'),
+-- (14, 'O+', 83.7, 1.88, '2025-01-12'),
+-- (15, 'A+', 71.9, 1.70, '2024-12-28'),
+-- (16, 'B-', 78.5, 1.78, '2025-01-20'),
+-- (17, 'AB+', 73.2, 1.71, '2024-12-12'),
+-- (18, 'O-', 80.9, 1.84, '2025-01-25'),
+-- (19, 'A-', 67.3, 1.63, '2024-12-08'),
+-- (20, 'B+', 84.6, 1.87, '2025-01-18');
 
 INSERT INTO Requests (RequestID, LocationID, BloodTypeRequested, RequestDate, RequestedQuantityCC) VALUES
 (1, 1, 'A+', '2024-11-01', 450),
@@ -418,48 +407,48 @@ INSERT INTO Transfusion_Records (TransfusionID, LocationID, TransfusionDate, Blo
 (20, 3, '2024-10-29', 19);
 
 INSERT INTO Transfusion (TransfusionID, PersonalID, LocationID, PreExamID, NurseID, Amount_Received_CC) VALUES
-(1, 5, 6, 9, 13, 410),
-(2, 6, 6, 9, 12, 221),
-(3, 14, 16, 4, 7, 361),
-(4, 19, 1, 1, 13, 256),
-(5, 5, 7, 13, 7, 349),
-(6, 15, 17, 15, 12, 307),
-(7, 10, 2, 14, 17, 347),
-(8, 5, 7, 8, 1, 272),
-(9, 16, 8, 18, 13, 250),
-(10, 20, 9, 11, 4, 388),
-(11, 4, 20, 15, 4, 201),
-(12, 10, 9, 15, 14, 203),
-(13, 16, 7, 2, 19, 356),
-(14, 6, 19, 13, 11, 383),
-(15, 16, 12, 15, 5, 298),
-(16, 4, 16, 20, 19, 326),
-(17, 1, 14, 9, 13, 444),
-(18, 8, 8, 11, 16, 283),
-(19, 7, 3, 8, 20, 337),
-(20, 15, 3, 13, 14, 265);
+-- (1, 5, 6, 9, 13, 410),
+-- (2, 6, 6, 9, 12, 221),
+-- (3, 14, 16, 4, 7, 361),
+-- (4, 19, 1, 1, 13, 256),
+-- (5, 5, 7, 13, 7, 349),
+(15, 6, 17, 1, 13, 307),
+(10, 7, 2, 2, 14, 347),
+(5, 8, 7, 3, 15, 272),
+(16, 9, 8, 4, 16, 250),
+(20, 10, 9, 5, 17, 388);
+-- (4, 11, 20, 6, 18, 201),
+-- (10, 12, 9, 15, 19, 203);
+-- (13, 16, 7, 2, 19, 356),
+-- (14, 6, 19, 13, 11, 383),
+-- (15, 16, 12, 15, 5, 298),
+-- (16, 4, 16, 20, 19, 326),
+-- (17, 1, 14, 9, 13, 444),
+-- (18, 8, 8, 11, 16, 283),
+-- (19, 7, 3, 8, 20, 337),
+-- (20, 15, 3, 13, 14, 265);
 
 INSERT INTO Donations (Donation_ID, Donor_ID, Donation_Type, Donation_Date, Quantity) VALUES
-(1, 176, 1, '2024-05-12', 315),
-(2, 11, 1, '2024-12-16', 485),
-(3, 6, 1, '2024-04-17', 436),
-(4, 15, 1, '2024-12-15', 439),
-(5, 33, 1, '2024-04-23', 353),
-(6, 84, 1, '2024-06-03', 454),
-(7, 165, 1, '2024-03-20', 318),
-(8, 8, 2, '2024-04-26', 355),
-(9, 14, 2, '2024-02-17', 416),
-(10, 55, 2, '2024-12-05', 484),
-(11, 1, 2, '2024-03-09', 380),
-(12, 656, 2, '2024-12-02', 405),
-(13, 19, 2, '2024-07-24', 321),
-(14, 9, 2, '2024-11-07', 369),
-(15, 66, 3, '2024-01-15', 330),
-(16, 3, 3, '2024-08-06', 413),
-(17, 98, 3, '2024-07-26', 466),
-(18, 97, 3, '2024-06-26', 342),
-(19, 17, 3, '2024-07-15', 300),
-(20, 13, 3, '2024-10-06', 395);
+(1, 1, 1, '2024-05-12', 315),
+(2, 2, 1, '2024-12-16', 485),
+(3, 3, 1, '2024-04-17', 436),
+(4, 4, 1, '2024-12-15', 439),
+(5, 5, 1, '2024-04-23', 353);
+-- (6, 84, 1, '2024-06-03', 454),
+-- (7, 165, 1, '2024-03-20', 318),
+-- (8, 8, 2, '2024-04-26', 355),
+-- (9, 14, 2, '2024-02-17', 416),
+-- (10, 55, 2, '2024-12-05', 484),
+-- (11, 1, 2, '2024-03-09', 380),
+-- (12, 656, 2, '2024-12-02', 405),
+-- (13, 19, 2, '2024-07-24', 321),
+-- (14, 9, 2, '2024-11-07', 369),
+-- (15, 66, 3, '2024-01-15', 330),
+-- (16, 3, 3, '2024-08-06', 413),
+-- (17, 98, 3, '2024-07-26', 466),
+-- (18, 97, 3, '2024-06-26', 342),
+-- (19, 17, 3, '2024-07-15', 300),
+-- (20, 13, 3, '2024-10-06', 395);
 
 -- Adding code with individual queries and more tables
 -- -------------------------------------------------------- Arbaaz
@@ -482,16 +471,16 @@ CREATE TABLE Donor_Post_Exam_Results (
 INSERT INTO Donor_Post_Exam_Results (PostExamID, Donor_ID, PreExamID, DiseaseDetected, EligibilityStatus, Remarks)
 VALUES
 (1, 1, 1, 0, 'Eligible', 'Fit for donation'),
-(2, 3, 2, 0, 'Deferred', 'Mild cold, defer for a week'),
-(3, 6, 4, 1, 'Disqualified', 'Detected flu symptoms'),
-(4, 8, 8, 1, 'Deferred', 'Sore throat, needs rest'),
-(5, 9, 9, 0, 'Eligible', 'Fit for donation'),
-(6, 11, 11, 1, 'Disqualified', 'Hypertension detected'),
-(7, 13, 13, 0, 'Eligible', 'Fit for donation'),
-(8, 14, 14, 0, 'Eligible', 'Healthy and fit'),
-(9, 15, 15, 0, 'Deferred', 'Minor headache, rest advised'),
-(10, 17, 17, 0, 'Eligible', 'Good health condition'),
-(11, 19, 19, 0, 'Eligible', 'Healthy and ready');
+(2, 2, 2, 0, 'Deferred', 'Mild cold, defer for a week'),
+(3, 3, 3, 1, 'Disqualified', 'Detected flu symptoms'),
+(4, 4, 4, 1, 'Deferred', 'Sore throat, needs rest'),
+(5, 5, 5, 0, 'Eligible', 'Fit for donation');
+-- (6, 11, 11, 1, 'Disqualified', 'Hypertension detected'),
+-- (7, 13, 13, 0, 'Eligible', 'Fit for donation'),
+-- (8, 14, 14, 0, 'Eligible', 'Healthy and fit'),
+-- (9, 15, 15, 0, 'Deferred', 'Minor headache, rest advised'),
+-- (10, 17, 17, 0, 'Eligible', 'Good health condition'),
+-- (11, 19, 19, 0, 'Eligible', 'Healthy and ready');
 
  -- 1.Specific to donor, suppose the donor travels abroad for donation and the hospital uses different units.
  select person.PersonalID, concat(FirstName, ' ', LastName) AS 'Name', Blood_Type, Age, Gender, 
@@ -659,17 +648,7 @@ INSERT INTO Scheduled_Donations (DonorID, NextDonationDate, IntervalDays, Locati
 (2, '2024-11-15', 14, 2),
 (3, '2024-12-01', 56, 1),
 (4, '2024-12-10', 7, 4),
-(5, '2024-11-05', 14, 5),
-(6, '2024-11-12', 56, 2),
-(7, '2024-11-17', 7, 3),
-(8, '2024-12-08', 56, 4),
-(9, '2024-11-20', 14, 1),
-(10, '2024-12-02', 56, 5),
-(11, '2024-11-18', 7, 2),
-(12, '2024-11-25', 14, 3),
-(13, '2024-12-05', 56, 4),
-(14, '2024-11-30', 7, 1),
-(15, '2024-11-22', 14, 2);
+(5, '2024-11-05', 14, 5);
 
 # Displays donors with scheduled donations within the next 30 days, assisting staff with reminders and resource allocation
 SELECT D.PersonalID AS DonorID,
@@ -699,16 +678,13 @@ CREATE TABLE IF NOT EXISTS Transfusion_Schedule (
 );
 
 INSERT INTO Transfusion_Schedule (PatientID, BloodType, NextTransfusionDate, FrequencyDays, LocationID) VALUES
-(1, 'A+', '2024-11-10', 30, 1),
-(2, 'B-', '2024-11-15', 14, 2),
-(3, 'O+', '2024-12-01', 7, 3),
-(4, 'AB+', '2024-12-05', 21, 4),
-(5, 'O-', '2024-11-20', 30, 5),
 (6, 'A-', '2024-11-25', 14, 2),
 (7, 'B+', '2024-11-12', 7, 1),
 (8, 'AB-', '2024-12-03', 30, 3),
 (9, 'O+', '2024-11-18', 21, 4),
-(10, 'A+', '2024-12-02', 14, 5);
+(10, 'A+', '2024-12-02', 14, 5),
+(11, 'A+', '2024-11-10', 30, 1),
+(12, 'B-', '2024-11-15', 14, 2);
 
 #Identifies patients due for transfusions in the next 30 days without notification, enabling timely reminders and preparation.
 SELECT P.FirstName, 
